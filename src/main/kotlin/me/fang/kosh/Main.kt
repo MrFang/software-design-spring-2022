@@ -2,6 +2,7 @@ package me.fang.kosh
 
 import me.fang.kosh.exceptions.ExitCalledException
 import me.fang.kosh.parser.commands
+import me.fang.kosh.process.ExternalProcess
 import me.fang.kosh.process.VariableAssigment
 import me.fang.kosh.process.commands.Cat
 import me.fang.kosh.process.commands.Echo
@@ -40,7 +41,7 @@ fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[
     else -> if (cmdWithArgs[0].contains('=')) {
         VariableAssigment(cmdWithArgs).run()
     } else {
-        "" // TODO: External process
+        ExternalProcess(cmdWithArgs).run()
     }
 }
 
@@ -54,7 +55,7 @@ fun processPipeline(pipeline: List<List<String>>): String = pipeline.fold("") { 
         else -> if (cmdWithArgs[0].contains('=')) {
             "" // In pipeline assigment do nothing
         } else {
-            "" // TODO: External process
+            ExternalProcess(cmdWithArgs).run(stdin)
         }
     }
 }
