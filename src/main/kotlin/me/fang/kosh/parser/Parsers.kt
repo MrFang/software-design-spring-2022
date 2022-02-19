@@ -24,6 +24,7 @@ val doubleQuote = char { c -> c == '"' }
 val dollar = char { c -> c == '$' }
 val space = char { c -> c == ' ' }
 val equal = char { c -> c == '=' }
+var dot = char { c -> c == '.' }
 
 val spaces = many(space)
 
@@ -40,6 +41,7 @@ val bareStringChar = char { c -> c.isLetterOrDigit() }
     .or(underscore)
     .or(dollar)
     .or(equal)
+    .or(dot)
 
 val bareString: Parser<Token> = some(bareStringChar)
     .map { l -> BareString(l.joinToString("")) }
