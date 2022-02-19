@@ -7,6 +7,10 @@ class Parser<Token>(private val f: (String) -> Pair<String, Token>?) {
         .and(other)
         .map { (_, t) -> t }
 
+    fun <Token2> before(other: Parser<Token2>): Parser<Token> = this
+        .and(other)
+        .map { (t, _) -> t }
+
     fun <Token2> and(other: Parser<Token2>): Parser<Pair<Token, Token2>> = Parser { s ->
         when (val res = parse(s)) {
             null -> null
