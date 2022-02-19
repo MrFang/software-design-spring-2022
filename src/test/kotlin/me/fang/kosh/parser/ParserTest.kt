@@ -61,5 +61,6 @@ class ParserTest {
         assertEquals(BareString("hello"), some(token).parse("echo hello")?.second?.get(1))
         assertNotNull(many(token).parse(""))
         assertEquals(2, commands.parse("cat file.txt | wc")?.second?.size)
+        assertEquals(BareString("--flag=value"), commands.parse("command --flag=value")?.second?.get(0)?.get(1))
     }
 }
