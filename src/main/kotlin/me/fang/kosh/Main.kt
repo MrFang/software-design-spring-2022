@@ -16,17 +16,21 @@ fun main() {
         when (commands) {
             null -> return
             else -> {
-                val stdout = if (commands.second.size == 1) {
-                    try {
-                        processSingleCommand(commands.second[0].map { tokenToString(it) })
-                    } catch (_: ExitCalledException) {
-                        return
+                try {
+                    val stdout = if (commands.second.size == 1) {
+                        try {
+                            processSingleCommand(commands.second[0].map { tokenToString(it) })
+                        } catch (_: ExitCalledException) {
+                            return
+                        }
+                    } else {
+                        processPipeline(commands.second.map { l -> l.map { tokenToString(it) } })
                     }
-                } else {
-                    processPipeline(commands.second.map { l -> l.map { tokenToString(it) } })
-                }
 
-                println(stdout)
+                    println(stdout)
+                } catch (e: java.lang.Exception) {
+                    System.err.println(e.message)
+                }
             }
         }
     }
