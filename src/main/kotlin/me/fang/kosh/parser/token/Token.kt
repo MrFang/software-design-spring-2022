@@ -1,5 +1,5 @@
 package me.fang.kosh.parser.token
 
-interface Token {
+sealed interface Token {
     val s: String
 }

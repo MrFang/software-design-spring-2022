@@ -1,9 +1,10 @@
-package me.fang.kosh.commands
+package me.fang.kosh.process.commands
 
+import me.fang.kosh.process.KoshProcess
 import java.io.File
 
-class Cat(private val args: List<String>) {
-    fun run(stdin: String = ""): String {
+class Cat(override val args: List<String>) : KoshProcess {
+    override fun run(stdin: String): String {
         return args
             .map { name -> File(name).readLines().fold("") { text, s -> "$text\n$s" } }
             .fold("") { out, text -> "$out\n\n$text" }

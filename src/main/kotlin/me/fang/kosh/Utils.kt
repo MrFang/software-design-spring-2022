@@ -1,7 +1,9 @@
 package me.fang.kosh
 
+import me.fang.kosh.parser.token.SingleQuotedString
+import me.fang.kosh.parser.token.Token
+
 fun String.applyEnv(): String {
-    // TODO: Process quoting
     val vars = Environment.vars
     var result = this
 
@@ -15,4 +17,9 @@ fun String.applyEnv(): String {
         }
 
     return result.trim()
+}
+
+fun tokenToString(t: Token): String = when (t) {
+    is SingleQuotedString -> t.s
+    else -> t.s.applyEnv()
 }
