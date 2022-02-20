@@ -1,5 +1,6 @@
 package me.fang.kosh.parser
 
+import me.fang.kosh.applyEnv
 import me.fang.kosh.parser.token.BareString
 import me.fang.kosh.parser.token.DoubleQuotedString
 import me.fang.kosh.parser.token.SingleQuotedString
@@ -32,7 +33,7 @@ private val spaces = many(space)
 
 private fun escaped(c: Parser<Char>) = backSlash.then(c)
 
-private val notTerminateChar = char { c -> c.isLetterOrDigit() }
+private val notTerminalChar = char { c -> c.isLetterOrDigit() }
     .or(plus)
     .or(minus)
     .or(star)
@@ -49,7 +50,7 @@ private val notTerminateChar = char { c -> c.isLetterOrDigit() }
     .or(escaped(pipelineSeparator))
     .or(escaped(dollar))
 
-private val bareStringChar = notTerminateChar
+private val bareStringChar = notTerminalChar
     .or(space)
     .or(pipelineSeparator)
 
@@ -86,19 +87,26 @@ private fun tokenToString(token: Token): String = when (token) {
 }
 
 private val token = spaces
-    .then(some(notTerminateChar).map { l -> l.joinToString("") })
+    .then(some(notTerminalChar).map { l -> l.joinToString("") })
 
 private val pipe = spaces
     .then(pipelineSeparator)
     .then(some(token))
 
+private val pipeline = some(token)
+    .and(many(pipe))
+    .map { (t, l) -> listOf(t).plus(l) }
+
 val commands = Parser { s ->
     when (val res = stringTokens.parse(s)) {
         null -> null
-        else -> some(token)
-            .and(many(pipe))
-            .map { (t, l) -> listOf(t).plus(l) }
-            // TODO: Save info about quoting
-            .parse(res.second.map { tokenToString(it) }.fold("") { a, v -> "$a$v" })
+        else -> pipeline.parse(
+            res.second.fold("") { str, token ->
+                when (token) {
+                    is SingleQuotedString -> "$str${tokenToString(token)}"
+                    else -> "$str${tokenToString(token).applyEnv()}"
+                }
+            }
+        )
     }
 }

@@ -8,10 +8,10 @@ fun String.applyEnv(): String {
         .findAll(this)
         .forEach {
             run {
-                val varName = it.value.drop(3)
+                val varName = it.value.drop(1)
                 result = result.replace("\$$varName", vars[varName] ?: "")
             }
         }
 
-    return result.trim()
+    return result
 }
