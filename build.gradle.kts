@@ -4,6 +4,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
     kotlin("jvm") version "1.6.10"
     application
+    jacoco
 }
 
 group = "me.fang"
@@ -19,6 +20,17 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        xml.outputLocation.set(File("$buildDir/reports/jacoco/report.xml"))
+        html.required.set(false)
+        csv.required.set(false)
+    }
+    executionData(File("build/jacoco/test.exec"))
+    dependsOn("test")
 }
 
 tasks.withType<KotlinCompile>() {
