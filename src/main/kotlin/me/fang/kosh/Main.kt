@@ -19,12 +19,12 @@ fun main() {
                 try {
                     val stdout = if (commands.second.size == 1) {
                         try {
-                            processSingleCommand(commands.second[0].map { tokenToString(it) })
+                            processSingleCommand(commands.second[0].map { s -> s.applyEnv() })
                         } catch (_: ExitCalledException) {
                             return
                         }
                     } else {
-                        processPipeline(commands.second.map { l -> l.map { tokenToString(it) } })
+                        processPipeline(commands.second.map { l -> l.map { s -> s.applyEnv() } })
                     }
 
                     println(stdout)
@@ -43,7 +43,7 @@ fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[
     "pwd" -> Pwd(cmdWithArgs).run()
     "exit" -> throw ExitCalledException()
     else -> if (cmdWithArgs[0].contains('=')) {
-        VariableAssigment(cmdWithArgs).run()
+        VariableAssigment(cmdWithArgs).run() // TODO: Run next commands
     } else {
         ExternalProcess(cmdWithArgs).run()
     }
