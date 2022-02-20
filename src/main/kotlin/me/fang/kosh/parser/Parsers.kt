@@ -26,7 +26,7 @@ private val space = char { c -> c == ' ' }
 private val equal = char { c -> c == '=' }
 private val dot = char { c -> c == '.' }
 private val pipelineSeparator = char { c -> c == '|' }
-private val comma = char {c -> c == ','}
+private val comma = char { c -> c == ',' }
 
 private val spaces = many(space)
 
