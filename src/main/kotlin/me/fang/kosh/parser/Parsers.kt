@@ -14,41 +14,22 @@ private fun char(p: (Char) -> Boolean): Parser<Char> = Parser { s ->
     }
 }
 
-private val plus = char { c -> c == '+' }
-private val minus = char { c -> c == '-' }
-private val star = char { c -> c == '*' }
-private val slash = char { c -> c == '/' }
 private val backSlash = char { c -> c == '\\' }
-private val underscore = char { c -> c == '_' }
 private val singleQuote = char { c -> c == '\'' }
 private val doubleQuote = char { c -> c == '"' }
-private val dollar = char { c -> c == '$' }
 private val space = char { c -> c == ' ' }
-private val equal = char { c -> c == '=' }
-private val dot = char { c -> c == '.' }
 private val pipelineSeparator = char { c -> c == '|' }
-private val comma = char { c -> c == ',' }
 
 private val spaces = many(space)
 
 private fun escaped(c: Parser<Char>) = backSlash.then(c)
 
-private val notTerminalChar = char { c -> c.isLetterOrDigit() }
-    .or(plus)
-    .or(minus)
-    .or(star)
-    .or(slash)
-    .or(underscore)
-    .or(dollar)
-    .or(equal)
-    .or(dot)
-    .or(comma)
-    .or(escaped(singleQuote))
-    .or(escaped(doubleQuote))
-    .or(escaped(space))
-    .or(escaped(backSlash))
-    .or(escaped(pipelineSeparator))
-    .or(escaped(dollar))
+private const val terminals = "|&;()<>\\ \n\t'\""
+
+private val terminalChar = char { terminals.contains(it) }
+
+private val notTerminalChar = char { !terminals.contains(it) }
+    .or(escaped(terminalChar))
 
 private val bareStringChar = notTerminalChar
     .or(space)
