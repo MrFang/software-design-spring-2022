@@ -1,6 +1,6 @@
 package me.fang.kosh.parser
 
-import me.fang.kosh.applyEnv
+import me.fang.kosh.Environment
 import me.fang.kosh.parser.token.BareString
 import me.fang.kosh.parser.token.DoubleQuotedString
 import me.fang.kosh.parser.token.SingleQuotedString
@@ -14,11 +14,11 @@ private fun char(p: (Char) -> Boolean): Parser<Char> = Parser { s ->
     }
 }
 
-private val backSlash = char { c -> c == '\\' }
-private val singleQuote = char { c -> c == '\'' }
-private val doubleQuote = char { c -> c == '"' }
-private val space = char { c -> c == ' ' }
-private val pipelineSeparator = char { c -> c == '|' }
+private val backSlash = char { it == '\\' }
+private val singleQuote = char { it == '\'' }
+private val doubleQuote = char { it == '"' }
+private val space = char { it == ' ' }
+private val pipelineSeparator = char { it == '|' }
 
 private val spaces = many(space)
 
@@ -41,14 +41,14 @@ private val bareString: Parser<Token> = some(bareStringChar)
 private val singleQuotedString: Parser<Token> = singleQuote
     .then<Token>(
         many(bareStringChar.or(doubleQuote))
-            .map { l -> SingleQuotedString(l.joinToString("")) }
+            .map { SingleQuotedString(it.joinToString("")) }
     )
     .before(singleQuote)
 
 private val doubleQuotedString: Parser<Token> = doubleQuote
     .then<Token>(
         many(bareStringChar.or(singleQuote))
-            .map { l -> DoubleQuotedString(l.joinToString("")) }
+            .map { DoubleQuotedString(it.joinToString("")) }
     )
     .before(doubleQuote)
 
@@ -68,7 +68,7 @@ private fun tokenToString(token: Token): String = when (token) {
 }
 
 private val token = spaces
-    .then(some(notTerminalChar).map { l -> l.joinToString("") })
+    .then(some(notTerminalChar).map { it.joinToString("") })
 
 private val pipe = spaces
     .then(pipelineSeparator)
@@ -77,6 +77,22 @@ private val pipe = spaces
 private val pipeline = some(token)
     .and(many(pipe))
     .map { (t, l) -> listOf(t).plus(l) }
+
+private fun String.applyEnv(): String {
+    val vars = Environment.vars
+    var result = this
+
+    "\\$[a-zA-z_][a-zA-Z0-9_]*".toRegex() // $var_name
+        .findAll(this)
+        .forEach {
+            run {
+                val varName = it.value.drop(1)
+                result = result.replace("\$$varName", vars[varName] ?: "")
+            }
+        }
+
+    return result
+}
 
 val commands = Parser { s ->
     when (val res = stringTokens.parse(s)) {

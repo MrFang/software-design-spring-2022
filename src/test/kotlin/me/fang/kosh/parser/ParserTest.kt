@@ -3,6 +3,7 @@ package me.fang.kosh.parser
 import me.fang.kosh.Environment
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class ParserTest {
     @Test
@@ -15,5 +16,7 @@ class ParserTest {
         assertEquals(Pair("", listOf(listOf("echo", "\$x"))), commands.parse("echo '\$x'\"\$x\""))
         Environment.vars["x"] = "=2"
         assertEquals(Pair("", listOf(listOf("echo", "\$x=2"))), commands.parse("echo '\$x'\"\$x\""))
+        assertNull(commands.parse(""))
+        assertNull(commands.parse("| echo hello"))
     }
 }
