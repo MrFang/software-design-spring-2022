@@ -40,14 +40,14 @@ private val bareString: Parser<Token> = some(bareStringChar)
 
 private val singleQuotedString: Parser<Token> = singleQuote
     .then<Token>(
-        many(bareStringChar.or(doubleQuote))
+        many(char { it != '\'' }.or(escaped(singleQuote)))
             .map { SingleQuotedString(it.joinToString("")) }
     )
     .before(singleQuote)
 
 private val doubleQuotedString: Parser<Token> = doubleQuote
     .then<Token>(
-        many(bareStringChar.or(singleQuote))
+        many(char { it != '"' }.or(escaped(doubleQuote)))
             .map { DoubleQuotedString(it.joinToString("")) }
     )
     .before(doubleQuote)
