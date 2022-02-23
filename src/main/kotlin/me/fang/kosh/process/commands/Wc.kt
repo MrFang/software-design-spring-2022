@@ -1,5 +1,6 @@
 package me.fang.kosh.process.commands
 
+import me.fang.kosh.getResource
 import me.fang.kosh.process.KoshProcess
 import kotlin.io.path.Path
 import kotlin.io.path.isDirectory
@@ -25,28 +26,32 @@ class Wc(override val args: List<String>) : KoshProcess {
                     fromFile = arg.split('=', limit = 1)[1]
                 } else if (!arg.startsWith("--")) {
                     defaultOutput = false
-                    arg.drop(1).forEach { c ->
-                        when (c) {
+                    arg.drop(1).forEach {
+                        when (it) {
                             'c' -> bc = true
                             'm' -> cc = true
                             'l' -> lc = true
                             'L' -> dw = true
                             'w' -> wc = true
                             else -> {
-                                System.err.println("invalid option: '$c'")
+                                System.err.println("invalid option: '$it'")
                                 return ""
                             }
                         }
                     }
-                }
-
-                when (arg) {
-                    "--help" -> { help = true; return@forEach }
-                    "--bytes" -> { bc = true; defaultOutput = false }
-                    "--chars" -> { cc = true; defaultOutput = false }
-                    "--lines" -> { lc = true; defaultOutput = false }
-                    "--max-line-length" -> { dw = true; defaultOutput = false }
-                    "--words" -> { wc = true; defaultOutput = false }
+                } else {
+                    when (arg.drop(2)) {
+                        "help" -> { help = true; return@forEach }
+                        "bytes" -> { bc = true; defaultOutput = false }
+                        "chars" -> { cc = true; defaultOutput = false }
+                        "lines" -> { lc = true; defaultOutput = false }
+                        "max-line-length" -> { dw = true; defaultOutput = false }
+                        "words" -> { wc = true; defaultOutput = false }
+                        else -> {
+                            System.err.println("Invalid option: '$arg'")
+                            return ""
+                        }
+                    }
                 }
             }
         }
@@ -58,7 +63,7 @@ class Wc(override val args: List<String>) : KoshProcess {
         }
 
         if (help) {
-            val file = this::class.java.getResource("/messages/commands-help/wc.txt")
+            val file = getResource("/messages/commands-help/wc.txt")
             return if (file == null) {
                 System.err.println("Internal error")
                 ""
@@ -76,31 +81,35 @@ class Wc(override val args: List<String>) : KoshProcess {
             }
         }
 
-        return filenames.fold("") { acc, name ->
-            run {
-                val text = if (name == "-") {
-                    if (stdinRead) "" else {
-                        stdinRead = true
-                        stdin
+        return if (filenames.isNotEmpty()) {
+            filenames.fold("") { out, name ->
+                run {
+                    val text = if (name == "-") {
+                        if (stdinRead) "" else {
+                            stdinRead = true
+                            stdin
+                        }
+                    } else {
+                        val f = Path(name)
+                        if (f.isDirectory()) {
+                            System.err.println("$name is directory")
+                        }
+                        f.readText()
                     }
-                } else {
-                    val f = Path(name)
-                    if (f.isDirectory()) {
-                        System.err.println("$name is directory")
-                    }
-                    f.readText()
-                }
 
-                "${acc}\n" +
-                    (if (lc) "${getLinesCount(text)} " else "") +
-                    (if (wc) "${getWordsCount(text)} " else "") +
-                    (if (cc) "${getCharsCount(text)} " else "") +
-                    (if (bc) "${getBytesCount(text)} " else "") +
-                    (if (dw) "${getDisplayWidth(text)} " else "") +
-                    name
-            }
-        }.drop(1)
+                    "${out}\n" + getOutput(text) + name
+                }
+            }.drop(1)
+        } else {
+            getOutput(stdin).dropLast(1)
+        }
     }
+
+    private fun getOutput(text: String): String = (if (lc) "${getLinesCount(text)} " else "") +
+        (if (wc) "${getWordsCount(text)} " else "") +
+        (if (cc) "${getCharsCount(text)} " else "") +
+        (if (bc) "${getBytesCount(text)} " else "") +
+        (if (dw) "${getDisplayWidth(text)} " else "")
 
     private fun getWordsCount(str: String): Int = str.split(' ').filter { it.isNotEmpty() }.size
 

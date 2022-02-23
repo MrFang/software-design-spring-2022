@@ -1,6 +1,7 @@
 package me.fang.kosh.process.commands
 
 import me.fang.kosh.Environment
+import me.fang.kosh.getResource
 import me.fang.kosh.process.KoshProcess
 
 class Pwd(override val args: List<String>) : KoshProcess {
@@ -30,7 +31,7 @@ class Pwd(override val args: List<String>) : KoshProcess {
         }
 
         return if (help) {
-            val file = this::class.java.getResource("/messages/commands-help/pwd.txt")
+            val file = getResource("/messages/commands-help/pwd.txt")
             if (file == null) {
                 System.err.println("Internal error")
                 ""

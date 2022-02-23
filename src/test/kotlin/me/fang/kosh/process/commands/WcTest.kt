@@ -1,5 +1,6 @@
 package me.fang.kosh.process.commands
 
+import me.fang.kosh.getResource
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -11,8 +12,9 @@ class WcTest {
         assertEquals("6 12 -", Wc(listOf("wc", "-mc", "-")).run("Привет"))
         assertEquals("2 -", Wc(listOf("wc", "-l", "-")).run("Two\nLines"))
         assertEquals("16 -", Wc(listOf("wc", "-L", "-")).run("Короткая\nИ длинная строки"))
+        assertEquals("1 1 3", Wc(listOf("wc")).run("123"))
         assertEquals(
-            this::class.java.getResource("/messages/commands-help/wc.txt")?.readText(),
+            getResource("/messages/commands-help/wc.txt")?.readText(),
             Wc(listOf("wc", "--help")).run()
         )
     }
