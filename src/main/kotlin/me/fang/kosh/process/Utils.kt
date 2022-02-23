@@ -13,7 +13,7 @@ fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[
     "pwd" -> Pwd(cmdWithArgs).run()
     "exit" -> throw ExitCalledException()
     else -> if (cmdWithArgs[0].contains('=')) {
-        VariableAssigment(cmdWithArgs).run() // TODO: Run next commands
+        VariableAssigment(cmdWithArgs).run()
     } else {
         ExternalProcess(cmdWithArgs).run()
     }
