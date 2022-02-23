@@ -31,11 +31,11 @@ private val terminalChar = char { terminals.contains(it) }
 private val notTerminalChar = char { !terminals.contains(it) }
     .or(escaped(terminalChar))
 
-private val bareStringChar = notTerminalChar
-    .or(space)
-    .or(pipelineSeparator)
-
-private val bareString: Parser<Token> = some(bareStringChar)
+private val bareString: Parser<Token> = some(
+    notTerminalChar
+        .or(space)
+        .or(pipelineSeparator)
+)
     .map { l -> BareString(l.joinToString("")) }
 
 private val singleQuotedString: Parser<Token> = singleQuote
