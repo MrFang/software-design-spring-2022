@@ -4,6 +4,11 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
+/**
+ * Представление окружения команды
+ * @property cwd текущая рабочая директория
+ * @property vars переменные окружения
+ */
 object Environment {
     var cwd: Path = Paths.get("").toAbsolutePath()
         set(value) {

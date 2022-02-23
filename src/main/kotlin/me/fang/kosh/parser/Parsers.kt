@@ -94,6 +94,12 @@ private fun String.applyEnv(): String {
     return result
 }
 
+/**
+ * Парсер пайплайна команд
+ *
+ * Возвращает список команд, каждая из которых представляет собой список
+ * из имени команды и переданных аргументов
+ */
 internal val commands = Parser { s ->
     when (val res = stringTokens.parse(s)) {
         null -> null

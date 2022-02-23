@@ -6,6 +6,14 @@ import me.fang.kosh.process.commands.Echo
 import me.fang.kosh.process.commands.Pwd
 import me.fang.kosh.process.commands.Wc
 
+/**
+ * Запускает команду.
+ *
+ * exit выбрасывает исключеие, пристваивание переменной мутирует окружение
+ * @param cmdWithArgs список из команды и её аргументов
+ * @return стандартынй вывод команды
+ * @see [processPipeline]
+ */
 fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[0]) {
     "cat" -> Cat(cmdWithArgs).run()
     "echo" -> Echo(cmdWithArgs).run()
@@ -19,6 +27,14 @@ fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[
     }
 }
 
+/**
+ * Запускает пайплайн.
+ *
+ * exit и присваивание переменной не имеют эффекта.
+ * @param pipeline спискок команд вместе с их аргументами
+ * @return stdout последней команды в пайплайне
+ * @see [processSingleCommand]
+ */
 fun processPipeline(pipeline: List<List<String>>): String = pipeline.fold("") { stdin, cmdWithArgs ->
     when (cmdWithArgs[0]) {
         "cat" -> Cat(cmdWithArgs).run(stdin)
