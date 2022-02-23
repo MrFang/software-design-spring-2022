@@ -25,16 +25,14 @@ fun main() {
 
         try {
             val stdout = if (commands.second.size == 1) {
-                try {
-                    processSingleCommand(commands.second[0])
-                } catch (_: ExitCalledException) {
-                    return
-                }
+                processSingleCommand(commands.second[0])
             } else {
                 processPipeline(commands.second)
             }
 
             println(stdout)
+        } catch (_: ExitCalledException) {
+            return
         } catch (e: Exception) {
             System.err.println(e.message)
         }
