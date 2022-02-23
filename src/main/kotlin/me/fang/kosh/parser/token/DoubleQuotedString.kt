@@ -1,6 +1,9 @@
 package me.fang.kosh.parser.token
 
-class DoubleQuotedString(override val s: String) : Token {
+/**
+ * Строка в двойных кавычках
+ */
+internal class DoubleQuotedString(override val s: String) : Token {
     override fun toString(): String = "DoubleQuotedString: $s"
 
     override fun equals(other: Any?): Boolean = if (other is DoubleQuotedString) s == other.s else false

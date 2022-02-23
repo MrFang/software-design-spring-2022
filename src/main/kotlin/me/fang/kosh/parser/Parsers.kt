@@ -94,7 +94,7 @@ private fun String.applyEnv(): String {
     return result
 }
 
-val commands = Parser { s ->
+internal val commands = Parser { s ->
     when (val res = stringTokens.parse(s)) {
         null -> null
         else -> pipeline.parse(
