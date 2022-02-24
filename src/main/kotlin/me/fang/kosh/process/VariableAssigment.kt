@@ -21,6 +21,6 @@ class VariableAssigment(override val args: List<String>) : KoshProcess {
 
         if (args.size > 1) return processSingleCommand(args.drop(1))
 
-        return ""
+        return "\n"
     }
 }

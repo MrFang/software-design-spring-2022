@@ -48,6 +48,6 @@ class Pwd(override val args: List<String>) : KoshProcess {
             Environment.cwd.toString()
         } else {
             Environment.cwd.toRealPath().toString()
-        }
+        } + '\n'
     }
 }

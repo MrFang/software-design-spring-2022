@@ -7,6 +7,7 @@ import me.fang.kosh.process.processSingleCommand
 
 fun main() {
     while (true) {
+        print("kosh:$ ")
         val input = readLine() ?: return
 
         if (input.isBlank()) continue
@@ -30,7 +31,7 @@ fun main() {
                 processPipeline(commands.second)
             }
 
-            println(stdout)
+            print(stdout)
         } catch (_: ExitCalledException) {
             return
         } catch (e: Exception) {

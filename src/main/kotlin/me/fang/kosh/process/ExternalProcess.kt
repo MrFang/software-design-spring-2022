@@ -30,6 +30,6 @@ class ExternalProcess(override val args: List<String>) : KoshProcess {
         } else {
             file.deleteIfExists()
             ""
-        }
+        } + '\n'
     }
 }

@@ -110,7 +110,7 @@ class Wc(override val args: List<String>) : KoshProcess {
             }.drop(1)
         } else {
             getOutput(stdin).dropLast(1)
-        }
+        } + '\n'
     }
 
     private fun getOutput(text: String): String = (if (lc) "${getLinesCount(text)} " else "") +
