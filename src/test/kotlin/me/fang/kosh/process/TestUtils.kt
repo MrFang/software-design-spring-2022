@@ -13,7 +13,7 @@ class TestUtils {
     fun testSingleCommand() {
         assertThrows<ExitCalledException> { processSingleCommand(listOf("exit")) }
         assertEquals("123 456", processSingleCommand(listOf("echo", "-n", "123", "456")))
-        assertEquals("${Environment.cwd.toString()}\n", processSingleCommand(listOf("pwd")))
+        assertEquals("${Environment.cwd}\n", processSingleCommand(listOf("pwd")))
         assertEquals(
             getResource("/messages/commands-help/cat.txt")?.readText(),
             processSingleCommand(listOf("cat", "--help"))
