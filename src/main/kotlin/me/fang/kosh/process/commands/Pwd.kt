@@ -4,10 +4,16 @@ import me.fang.kosh.Environment
 import me.fang.kosh.getResource
 import me.fang.kosh.process.KoshProcess
 
+/**
+ * Команда pwd
+ */
 class Pwd(override val args: List<String>) : KoshProcess {
     private var logical = true
     private var help = false
 
+    /**
+     * Возвращает текущую рабочую директорию
+     */
     override fun run(stdin: String): String {
         args.drop(1).forEach { arg ->
             run {

@@ -5,6 +5,9 @@ import me.fang.kosh.process.KoshProcess
 import kotlin.io.path.Path
 import kotlin.io.path.readText
 
+/**
+ * Команда cat
+ */
 class Cat(override val args: List<String>) : KoshProcess {
     private var help = false
     private var numberNonEmptyLines = false
@@ -15,6 +18,9 @@ class Cat(override val args: List<String>) : KoshProcess {
     private var showNonPrinting = false
     private var stdinRead = false
 
+    /**
+     * Парсит stdin, находит в нём имена файлов и выводит их содержимое в порядке ввода в stdout
+     */
     override fun run(stdin: String): String {
         val filenames = args.drop(1).filter { it == "-" || !it.startsWith('-') }
         args.drop(1).filter { it.startsWith('-') && it != "-" }.forEach { arg ->

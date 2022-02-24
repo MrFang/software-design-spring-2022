@@ -1,7 +1,7 @@
 package me.fang.kosh.process
 
 /**
- * Общий интерфейс для всего, что можно запусукать
+ * Общий интерфейс для всего, что можно запускать
  * @property args список аргументов процесса вместе с именем команды, если таковое есть
  */
 interface KoshProcess {
@@ -9,8 +9,8 @@ interface KoshProcess {
 
     /**
      * Запускает процесс
-     * @param stdin Стандартный ввод
-     * @return Станлартный вывод
+     * @param stdin стандартный ввод
+     * @return Стандартный вывод
      */
     fun run(stdin: String = ""): String
 }

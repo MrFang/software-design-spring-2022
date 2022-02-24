@@ -6,6 +6,9 @@ import kotlin.io.path.Path
 import kotlin.io.path.isDirectory
 import kotlin.io.path.readText
 
+/**
+ * Команда wc
+ */
 class Wc(override val args: List<String>) : KoshProcess {
     private var help = false
     private var defaultOutput = true
@@ -17,6 +20,11 @@ class Wc(override val args: List<String>) : KoshProcess {
     private var fromFile: String? = null
     private var stdinRead = false
 
+    /**
+     * Забирает из аргументов имена файлов, читает их и считает по ним число
+     * слов, переводов строки, символов, байт и максимальную длину строки.
+     * Возвращает посчитанные метрики в качестве строки
+     */
     override fun run(stdin: String): String {
         var filenames = args.drop(1).filter { it == "-" || !it.startsWith('-') }
 

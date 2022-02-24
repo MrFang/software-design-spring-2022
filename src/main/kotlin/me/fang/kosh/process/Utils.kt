@@ -9,9 +9,9 @@ import me.fang.kosh.process.commands.Wc
 /**
  * Запускает команду.
  *
- * exit выбрасывает исключеие, пристваивание переменной мутирует окружение
+ * exit выбрасывает исключение, присваивание переменной мутирует окружение
  * @param cmdWithArgs список из команды и её аргументов
- * @return стандартынй вывод команды
+ * @return Стандартный вывод команды
  * @see [processPipeline]
  */
 fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[0]) {
@@ -31,7 +31,7 @@ fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[
  * Запускает пайплайн.
  *
  * exit и присваивание переменной не имеют эффекта.
- * @param pipeline спискок команд вместе с их аргументами
+ * @param pipeline список команд вместе с их аргументами
  * @return stdout последней команды в пайплайне
  * @see [processSingleCommand]
  */
