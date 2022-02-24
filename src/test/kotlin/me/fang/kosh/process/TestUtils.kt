@@ -13,7 +13,7 @@ class TestUtils {
     fun testSingleCommand() {
         assertThrows<ExitCalledException> { processSingleCommand(listOf("exit")) }
         assertEquals("123 456", processSingleCommand(listOf("echo", "-n", "123", "456")))
-        assertEquals(Environment.cwd.toString(), processSingleCommand(listOf("pwd")))
+        assertEquals("${Environment.cwd.toString()}\n", processSingleCommand(listOf("pwd")))
         assertEquals(
             getResource("/messages/commands-help/cat.txt")?.readText(),
             processSingleCommand(listOf("cat", "--help"))
@@ -24,7 +24,7 @@ class TestUtils {
     fun testPipeline() {
         assertDoesNotThrow { processPipeline(listOf(listOf("echo"), listOf("exit"))) }
         assertEquals("123\n", processPipeline(listOf(listOf("echo", "123"), listOf("cat"))))
-        assertEquals("2 -", processPipeline(listOf(listOf("echo", "123", "456"), listOf("wc", "-", "-w"))))
+        assertEquals("2 -\n", processPipeline(listOf(listOf("echo", "123", "456"), listOf("wc", "-", "-w"))))
         assertEquals(
             "123\$",
             processPipeline(

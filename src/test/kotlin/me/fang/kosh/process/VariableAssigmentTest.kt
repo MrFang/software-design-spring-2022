@@ -9,6 +9,6 @@ class VariableAssigmentTest {
     fun assigmentTest() {
         assertEquals("123", VariableAssigment(listOf("X=2", "echo", "-n", "123")).run())
         assertEquals("2", Environment.vars["X"])
-        assertEquals("", VariableAssigment(listOf("X=2")).run())
+        assertEquals("\n", VariableAssigment(listOf("X=2")).run())
     }
 }

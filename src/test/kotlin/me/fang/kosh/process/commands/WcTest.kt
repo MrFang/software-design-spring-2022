@@ -7,12 +7,12 @@ import kotlin.test.assertEquals
 class WcTest {
     @Test
     fun testWc() {
-        assertEquals("1 2 3 -", Wc(listOf("wc", "-")).run("1 2"))
-        assertEquals("2 -", Wc(listOf("wc", "-w", "-")).run("Hello, World!"))
-        assertEquals("6 12 -", Wc(listOf("wc", "-mc", "-")).run("Привет"))
-        assertEquals("2 -", Wc(listOf("wc", "-l", "-")).run("Two\nLines"))
-        assertEquals("16 -", Wc(listOf("wc", "-L", "-")).run("Короткая\nИ длинная строки"))
-        assertEquals("1 1 3", Wc(listOf("wc")).run("123"))
+        assertEquals("1 2 3 -\n", Wc(listOf("wc", "-")).run("1 2"))
+        assertEquals("2 -\n", Wc(listOf("wc", "-w", "-")).run("Hello, World!"))
+        assertEquals("6 12 -\n", Wc(listOf("wc", "-mc", "-")).run("Привет"))
+        assertEquals("2 -\n", Wc(listOf("wc", "-l", "-")).run("Two\nLines"))
+        assertEquals("16 -\n", Wc(listOf("wc", "-L", "-")).run("Короткая\nИ длинная строки"))
+        assertEquals("1 1 3\n", Wc(listOf("wc")).run("123"))
         assertEquals(
             getResource("/messages/commands-help/wc.txt")?.readText(),
             Wc(listOf("wc", "--help")).run()
