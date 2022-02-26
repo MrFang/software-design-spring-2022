@@ -21,7 +21,7 @@ fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[
     "pwd" -> Pwd(cmdWithArgs).run()
     "exit" -> throw ExitCalledException()
     else -> if (cmdWithArgs[0].contains('=')) {
-        VariableAssigment(cmdWithArgs).run()
+        VariableAssignment(cmdWithArgs).run()
     } else {
         ExternalProcess(cmdWithArgs).run()
     }
@@ -43,7 +43,7 @@ fun processPipeline(pipeline: List<List<String>>): String = pipeline.fold("") { 
         "pwd" -> Pwd(cmdWithArgs).run(stdin)
         "exit" -> "" // Exit on pipeline do nothing
         else -> if (cmdWithArgs[0].contains('=')) {
-            "" // In pipeline assigment do nothing
+            "" // In pipeline assignment do nothing
         } else {
             ExternalProcess(cmdWithArgs).run(stdin)
         }
