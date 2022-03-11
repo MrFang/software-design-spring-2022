@@ -15,7 +15,7 @@ internal sealed interface Token {
 internal sealed interface QuotationToken : Token
 
 /**
- * Набор различных Type-Union, которые используются, для более точного определения типа при парсинге
+ * Набор различных Type-Union, которые используются, для более точного определения типа во время парсинга
  */
 internal sealed interface StrOrVariableOrControl : Token
 
