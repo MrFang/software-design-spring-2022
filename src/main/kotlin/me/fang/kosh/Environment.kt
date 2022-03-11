@@ -9,7 +9,7 @@ import kotlin.io.path.isDirectory
  * @property cwd текущая рабочая директория
  * @property vars переменные окружения
  */
-object Environment {
+internal object Environment {
     var cwd: Path = Paths.get("").toAbsolutePath()
         set(value) {
             if (value.isDirectory()) {

@@ -83,8 +83,7 @@ private val nonControlToken = some(nonControlChar).map { it.joinToString("") }
 
 private val bareStringTokens = many(
     (nonControlToken.map<StrOrControl> { Str(it) })
-        // По какой-то причине, здесь не срабатывает то, что ControlToken -- наследник StrOrControl
-        .or(controlToken as Parser<String, StrOrControl>)
+        .or(controlToken.map { it }) // Для правильного type-inference
 )
 
 private val stringWithVars = some(
@@ -143,18 +142,17 @@ private fun preTokenList(str: String): Result<List<StrOrControl>> {
                 is Var -> Str(Environment.vars.getOrDefault(t.s, ""))
                 is Str -> t
                 is ControlSymbol -> t
-                else -> Str(t.s) // Недостижимо, но без этого не компилится. Бага Kotlin?
             }
         }
     )
 }
 
 /**
- * Прасит переданную строку и возвращает список команд, каждая из которых представляется списком из имени и аргументов
+ * Парсит переданную строку и возвращает список команд, каждая из которых представляется списком из имени и аргументов
  * @param s входная строка
  * @return Список команд или failure, если парсинг не удался
  */
-fun parse(s: String): Result<List<List<String>>> {
+internal fun parse(s: String): Result<List<List<String>>> {
     val preTokens = preTokenList(s).getOrElse { return Result.failure(it) }
     val res = commands.parse(preTokens).getOrElse { return Result.failure(it) }
 
