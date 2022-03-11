@@ -149,6 +149,11 @@ private fun preTokenList(str: String): Result<List<StrOrControl>> {
     )
 }
 
+/**
+ * Прасит переданную строку и возвращает список команд, каждая из которых представляется списком из имени и аргументов
+ * @param s входная строка
+ * @return Список команд или failure, если парсинг не удался
+ */
 fun parse(s: String): Result<List<List<String>>> {
     val preTokens = preTokenList(s).getOrElse { return Result.failure(it) }
     val res = commands.parse(preTokens).getOrElse { return Result.failure(it) }
