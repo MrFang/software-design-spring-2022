@@ -8,3 +8,13 @@ package me.fang.kosh.parser.token
 sealed interface Token {
     val s: String
 }
+
+internal sealed interface QuotationToken : Token
+
+internal sealed interface StrOrVariableOrControl : Token
+
+internal sealed interface StrOrControl : StrOrVariableOrControl
+
+internal sealed interface StrOrVariable : StrOrVariableOrControl
+
+internal sealed interface ControlSymbol : StrOrControl

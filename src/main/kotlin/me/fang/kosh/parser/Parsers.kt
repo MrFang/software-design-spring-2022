@@ -1,115 +1,157 @@
 package me.fang.kosh.parser
 
 import me.fang.kosh.Environment
+import me.fang.kosh.exceptions.UnexpectedTokenException
 import me.fang.kosh.parser.token.BareString
+import me.fang.kosh.parser.token.ControlSymbol
 import me.fang.kosh.parser.token.DoubleQuotedString
+import me.fang.kosh.parser.token.PipelineSeparator
+import me.fang.kosh.parser.token.QuotationToken
 import me.fang.kosh.parser.token.SingleQuotedString
-import me.fang.kosh.parser.token.Token
+import me.fang.kosh.parser.token.Space
+import me.fang.kosh.parser.token.Str
+import me.fang.kosh.parser.token.StrOrControl
+import me.fang.kosh.parser.token.StrOrVariable
+import me.fang.kosh.parser.token.StrOrVariableOrControl
+import me.fang.kosh.parser.token.Var
 
-private fun char(p: (Char) -> Boolean): Parser<Char> = Parser { s ->
-    if (s.isEmpty() || !p(s[0])) {
-        return@Parser null
+private fun char(p: (Char) -> Boolean): Parser<String, Char> = Parser { s ->
+    if (s.isEmpty()) {
+        Result.failure(UnexpectedTokenException("<empty string>"))
+    } else if (!p(s.first())) {
+        Result.failure(UnexpectedTokenException(s.first().toString()))
     } else {
-        return@Parser Pair(s.drop(1), s[0])
+        Result.success(Pair(s.drop(1), s.first()))
     }
 }
+
+private fun tok(p: (StrOrControl) -> Boolean): Parser<List<StrOrControl>, StrOrControl> = Parser { l ->
+    if (l.isEmpty()) {
+        Result.failure(UnexpectedTokenException("<empty list>"))
+    } else if (!p(l.first())) {
+        Result.failure(UnexpectedTokenException(l.first().s))
+    } else {
+        Result.success(Pair(l.drop(1), l[0]))
+    }
+}
+
+private const val CONTROLS = "|&;()<> "
 
 private val backSlash = char { it == '\\' }
 private val singleQuote = char { it == '\'' }
 private val doubleQuote = char { it == '"' }
-private val space = char { it == ' ' }
-private val pipelineSeparator = char { it == '|' }
+private val dollar = char { it == '$' }
+private fun escaped(c: Parser<String, Char>) = backSlash.then(c)
+private val controlChar = char { CONTROLS.contains(it) }
+private val nonControlChar = escaped(controlChar).or(char { !CONTROLS.contains(it) })
 
-private val spaces = many(space)
+private val spaceToken = char { it == ' ' }.map<ControlSymbol> { Space(it.toString()) }
+private val pipeToken = many(spaceToken)
+    .then(char { it == '|' }.map<ControlSymbol> { PipelineSeparator(it.toString()) })
+private val controlToken = spaceToken.or(pipeToken) // TODO: При расширении сюда можно добавить остальные управляющие последовательности
 
-private fun escaped(c: Parser<Char>) = backSlash.then(c)
+private val variable = dollar
+    .then(char { it.isLetter() })
+    .and(
+        many(char { it.isLetterOrDigit() })
+            .map { it.joinToString("") }
+    ).map { (h, t) -> h + t }
 
-private const val terminals = "|&;()<>\\ \n\t'\""
-
-private val terminalChar = char { terminals.contains(it) }
-
-private val notTerminalChar = char { !terminals.contains(it) }
-    .or(escaped(terminalChar))
-
-private val bareString: Parser<Token> = some(
-    notTerminalChar
-        .or(space)
-        .or(pipelineSeparator)
+private val bareString: Parser<String, QuotationToken> = some(
+    escaped(singleQuote)
+        .or(escaped(doubleQuote))
+        .or(char { it != '"' && it != '\'' })
 )
-    .map { l -> BareString(l.joinToString("")) }
+    .map { it.joinToString("") }
+    .map { BareString(it) }
 
-private val singleQuotedString: Parser<Token> = singleQuote
-    .then<Token>(
-        many(char { it != '\'' }.or(escaped(singleQuote)))
-            .map { SingleQuotedString(it.joinToString("")) }
-    )
-    .before(singleQuote)
-
-private val doubleQuotedString: Parser<Token> = doubleQuote
-    .then<Token>(
-        many(char { it != '"' }.or(escaped(doubleQuote)))
-            .map { DoubleQuotedString(it.joinToString("")) }
-    )
+private val doubleQuotedString: Parser<String, QuotationToken> = doubleQuote
+    .then(many(escaped(doubleQuote).or(char { it != '"' })))
     .before(doubleQuote)
+    .map { it.joinToString("") }
+    .map { DoubleQuotedString(it) }
 
-private val stringTokens = many(bareString.or(doubleQuotedString).or(singleQuotedString))
+private val singleQuotedString: Parser<String, QuotationToken> = singleQuote
+    .then(many(escaped(singleQuote).or(char { it != '\'' })))
+    .before(singleQuote)
+    .map { it.joinToString("") }
+    .map { SingleQuotedString(it) }
 
-private fun String.escapeControlSymbols(): String = this
-    .replace("\\", "\\\\")
-    .replace(" ", "\\ ")
-    .replace("|", "\\|")
-    .replace("\"", "\\\"")
-    .replace("'", "\\'")
+private val quotedStrings = many(bareString.or(doubleQuotedString).or(singleQuotedString))
 
-private fun tokenToString(token: Token): String = when (token) {
-    is BareString -> token.s
-    is DoubleQuotedString -> token.s.escapeControlSymbols()
-    is SingleQuotedString -> token.s.escapeControlSymbols()
-}
+private val nonControlToken = some(nonControlChar).map { it.joinToString("") }
 
-private val token = spaces
-    .then(some(notTerminalChar).map { it.joinToString("") })
+private val bareStringTokens = many(
+    (nonControlToken.map<StrOrControl> { Str(it) })
+        // По какой-то причине, здесь не срабатывает то, что ControlToken -- наследник StrOrControl
+        .or(controlToken as Parser<String, StrOrControl>)
+)
 
-private val pipe = spaces
-    .then(pipelineSeparator)
-    .then(some(token))
+private val stringWithVars = some(
+    escaped(char { true }).map<StrOrVariable> { Str(it.toString()) }
+        .or(variable.map { Var(it) })
+        .or(char { it != '$' }.map { Str(it.toString()) })
+)
 
-private val pipeline = some(token)
+private val commandToken = many(tok { it is Space })
+    .then(
+        some(tok { it is Str })
+            .map { it.reduce { a, v -> Str(a.s + v.s) } }
+    )
+
+private val cmdWithArgs = some(commandToken)
+
+private val pipe = many(tok { it is Space })
+    .then(tok { it is PipelineSeparator })
+    .then(cmdWithArgs)
+
+private val commands = cmdWithArgs
     .and(many(pipe))
-    .map { (t, l) -> listOf(t).plus(l) }
+    .map { (h, t) -> listOf(h).plus(t) }
 
-private fun String.applyEnv(): String {
-    val vars = Environment.vars
-    var result = this
+private fun preTokenList(str: String): Result<List<StrOrControl>> {
+    val quoted = quotedStrings.parse(str).getOrElse { return Result.failure(it) }
 
-    "\\$[a-zA-z_][a-zA-Z0-9_]*".toRegex() // $var_name
-        .findAll(this)
-        .forEach {
-            run {
-                val varName = it.value.drop(1)
-                result = result.replace("\$$varName", vars[varName] ?: "")
+    val result: MutableList<StrOrVariableOrControl> = mutableListOf()
+
+    for (s in quoted.second) {
+        when (s) {
+            is SingleQuotedString -> result.add(Str(s.s))
+            is DoubleQuotedString -> {
+                val stringsAndVars = stringWithVars.parse(s.s).getOrElse { return Result.failure(it) }
+                result.addAll(stringsAndVars.second)
             }
-        }
+            is BareString -> {
+                val tokens = bareStringTokens.parse(s.s).getOrElse { return Result.failure(it) }
 
-    return result
-}
-
-/**
- * Парсер пайплайна команд
- *
- * Возвращает список команд, каждая из которых представляет собой список
- * из имени команды и переданных аргументов
- */
-internal val commands = Parser { s ->
-    when (val res = stringTokens.parse(s)) {
-        null -> null
-        else -> pipeline.parse(
-            res.second.fold("") { str, token ->
-                when (token) {
-                    is SingleQuotedString -> "$str${tokenToString(token)}"
-                    else -> "$str${tokenToString(token).applyEnv()}"
+                for (t in tokens.second) {
+                    when (t) {
+                        is ControlSymbol -> result.add(t)
+                        is Str -> {
+                            val stringsAndVars = stringWithVars.parse(t.s).getOrElse { return Result.failure(it) }
+                            result.addAll(stringsAndVars.second)
+                        }
+                    }
                 }
             }
-        )
+        }
     }
+
+    return Result.success(
+        result.map { t ->
+            when (t) {
+                is Var -> Str(Environment.vars.getOrDefault(t.s, ""))
+                is Str -> t
+                is ControlSymbol -> t
+                else -> Str(t.s) // Недостижимо, но без этого не компилится. Бага Kotlin?
+            }
+        }
+    )
+}
+
+fun parse(s: String): Result<List<List<String>>> {
+    val preTokens = preTokenList(s).getOrElse { return Result.failure(it) }
+    val res = commands.parse(preTokens).getOrElse { return Result.failure(it) }
+
+    return Result.success(res.second.map { l -> l.map { it.s } })
 }

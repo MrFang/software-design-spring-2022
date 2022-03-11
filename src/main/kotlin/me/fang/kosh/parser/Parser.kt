@@ -6,13 +6,13 @@ package me.fang.kosh.parser
  * @param f функция принимающая строку и возвращающая пару из остатка строки и результата парсинга
  * или null, если парсинг не удался
  */
-internal class Parser<Token>(private val f: (String) -> Pair<String, Token>?) {
+internal class Parser<Input, Token>(private val f: (Input) -> Result<Pair<Input, Token>>) {
     /**
      * Запускает парсинг данной строки.
      * @param s строка для парсинга
      * @return Результат парсинга или null, если парсинг не удался
      */
-    fun parse(s: String): Pair<String, Token>? = f(s)
+    fun parse(s: Input): Result<Pair<Input, Token>> = f(s)
 
     /**
      * Запускает на строке сначала `this` парсер, а потом переданный, на остатке строки.
@@ -24,7 +24,7 @@ internal class Parser<Token>(private val f: (String) -> Pair<String, Token>?) {
      * @see [before]
      * @see [and]
      */
-    fun <Token2> then(other: Parser<Token2>): Parser<Token2> = this
+    fun <Token2> then(other: Parser<Input, Token2>): Parser<Input, Token2> = this
         .and(other)
         .map { (_, t) -> t }
 
@@ -38,7 +38,7 @@ internal class Parser<Token>(private val f: (String) -> Pair<String, Token>?) {
      * @see [then]
      * @see [and]
      */
-    fun <Token2> before(other: Parser<Token2>): Parser<Token> = this
+    fun <Token2> before(other: Parser<Input, Token2>): Parser<Input, Token> = this
         .and(other)
         .map { (t, _) -> t }
 
@@ -53,14 +53,10 @@ internal class Parser<Token>(private val f: (String) -> Pair<String, Token>?) {
      * @see [then]
      * @see [or]
      */
-    fun <Token2> and(other: Parser<Token2>): Parser<Pair<Token, Token2>> = Parser { s ->
-        when (val res = parse(s)) {
-            null -> null
-            else -> when (val res2 = other.parse(res.first)) {
-                null -> null
-                else -> Pair(res2.first, Pair(res.second, res2.second))
-            }
-        }
+    fun <Token2> and(other: Parser<Input, Token2>): Parser<Input, Pair<Token, Token2>> = Parser { s ->
+        val res = parse(s).getOrElse { return@Parser Result.failure(it) }
+        val res2 = other.parse(res.first).getOrElse { return@Parser Result.failure(it) }
+        Result.success(Pair(res2.first, Pair(res.second, res2.second)))
     }
 
     /**
@@ -70,11 +66,8 @@ internal class Parser<Token>(private val f: (String) -> Pair<String, Token>?) {
      * @param g функция преобразования результата
      * @return Парсер с преобразованным результатом
      */
-    fun <Token2> map(g: (Token) -> Token2): Parser<Token2> = Parser { s ->
-        when (val res = parse(s)) {
-            null -> null
-            else -> Pair(res.first, g(res.second))
-        }
+    fun <Token2> map(g: (Token) -> Token2): Parser<Input, Token2> = Parser { s ->
+        parse(s).mapCatching { (i, r) -> Pair(i, g(r)) }
     }
 
     /**
@@ -83,10 +76,13 @@ internal class Parser<Token>(private val f: (String) -> Pair<String, Token>?) {
      * @return Парсер с результатом первого или второго парсера
      * @see [and]
      */
-    fun or(other: Parser<Token>): Parser<Token> = Parser { s ->
-        when (val res = parse(s)) {
-            null -> other.parse(s)
-            else -> res
+    fun or(other: Parser<Input, Token>): Parser<Input, Token> = Parser { s ->
+        val res = parse(s)
+
+        if (res.isSuccess) {
+            res
+        } else {
+            other.parse(s)
         }
     }
 }
@@ -100,18 +96,18 @@ internal class Parser<Token>(private val f: (String) -> Pair<String, Token>?) {
  * поэтому результирующий парсер всегда успешен
  * @see [some]
  */
-internal fun <Token> many(p: Parser<Token>): Parser<List<Token>> = Parser { s ->
+internal fun <Input, Token> many(p: Parser<Input, Token>): Parser<Input, List<Token>> = Parser { s ->
     run {
         var res = listOf<Token>()
         var rem = s
         var maybePair = p.parse(rem)
 
-        while (maybePair != null && maybePair.first.length < rem.length) {
-            rem = maybePair.first
-            res = res.plus(maybePair.second)
+        while (maybePair.isSuccess && maybePair.getOrThrow() != rem) {
+            rem = maybePair.getOrThrow().first
+            res = res.plus(maybePair.getOrThrow().second)
             maybePair = p.parse(rem)
         }
-        return@Parser Pair(rem, res)
+        return@Parser Result.success(Pair(rem, res))
     }
 }
 
@@ -123,9 +119,7 @@ internal fun <Token> many(p: Parser<Token>): Parser<List<Token>> = Parser { s ->
  * @return парсер со списком распаршенных резульатов. Список сожержит хотя бы один элемент
  * @see [many]
  */
-internal fun <Token> some(p: Parser<Token>): Parser<List<Token>> = Parser { s ->
-    when (val res = p.parse(s)) {
-        null -> null
-        else -> many(p).map { l -> listOf(res.second).plus(l) }.parse(res.first)
-    }
+internal fun <Input, Token> some(p: Parser<Input, Token>): Parser<Input, List<Token>> = Parser { s ->
+    val res = p.parse(s).getOrElse { return@Parser Result.failure(it) }
+    many(p).map { l -> listOf(res.second).plus(l) }.parse(res.first)
 }

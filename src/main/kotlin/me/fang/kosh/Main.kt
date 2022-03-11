@@ -1,7 +1,7 @@
 package me.fang.kosh
 
 import me.fang.kosh.exceptions.ExitCalledException
-import me.fang.kosh.parser.commands
+import me.fang.kosh.parser.parse
 import me.fang.kosh.process.processPipeline
 import me.fang.kosh.process.processSingleCommand
 
@@ -12,23 +12,18 @@ fun main() {
 
         if (input.isBlank()) continue
 
-        val commands = commands.parse(input)
+        val commands = parse(input)
 
-        if (commands == null) {
-            System.err.println("Syntax error on '${input[0]}'")
-            continue
-        }
-
-        if (commands.first != "") {
-            System.err.println("Syntax error on '${commands.first[0]}'")
+        if (commands.isFailure) {
+            System.err.println(commands.exceptionOrNull()?.message)
             continue
         }
 
         try {
-            val stdout = if (commands.second.size == 1) {
-                processSingleCommand(commands.second[0])
+            val stdout = if (commands.getOrNull()?.size == 1) {
+                processSingleCommand(commands.getOrThrow()[0])
             } else {
-                processPipeline(commands.second)
+                processPipeline(commands.getOrThrow())
             }
 
             print(stdout)
