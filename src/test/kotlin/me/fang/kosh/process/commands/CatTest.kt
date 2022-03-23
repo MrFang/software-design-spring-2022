@@ -13,6 +13,9 @@ class CatTest {
         assertEquals("123\n\n456", Cat(listOf("cat", "-s")).run("123\n\n\n456"))
         assertEquals("1 123\n\n\n2 456", Cat(listOf("cat", "-b")).run("123\n\n\n456"))
         assertEquals("1 123\n2\n3 456", Cat(listOf("cat", "-ns")).run("123\n\n\n456"))
-        assertEquals(getResource("/messages/commands-help/cat.txt")?.readText(), Cat(listOf("cat", "--help")).run())
+        assertEquals(
+            getResource("/messages/commands-help/cat.txt")?.readText(),
+            Cat(listOf("cat", "--help")).run("")
+        )
     }
 }

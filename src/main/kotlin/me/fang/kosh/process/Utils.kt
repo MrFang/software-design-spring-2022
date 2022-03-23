@@ -3,6 +3,7 @@ package me.fang.kosh.process
 import me.fang.kosh.exceptions.ExitCalledException
 import me.fang.kosh.process.commands.Cat
 import me.fang.kosh.process.commands.Echo
+import me.fang.kosh.process.commands.Grep
 import me.fang.kosh.process.commands.Pwd
 import me.fang.kosh.process.commands.Wc
 
@@ -15,15 +16,16 @@ import me.fang.kosh.process.commands.Wc
  * @see [processPipeline]
  */
 fun processSingleCommand(cmdWithArgs: List<String>): String = when (cmdWithArgs[0]) {
-    "cat" -> Cat(cmdWithArgs).run()
-    "echo" -> Echo(cmdWithArgs).run()
-    "wc" -> Wc(cmdWithArgs).run()
-    "pwd" -> Pwd(cmdWithArgs).run()
+    "cat" -> Cat(cmdWithArgs).run("")
+    "echo" -> Echo(cmdWithArgs).run("")
+    "wc" -> Wc(cmdWithArgs).run("")
+    "pwd" -> Pwd(cmdWithArgs).run("")
+    "grep" -> Grep(cmdWithArgs).run("")
     "exit" -> throw ExitCalledException()
     else -> if (cmdWithArgs[0].contains('=')) {
-        VariableAssignment(cmdWithArgs).run()
+        VariableAssignment(cmdWithArgs).run("")
     } else {
-        ExternalProcess(cmdWithArgs).run()
+        ExternalProcess(cmdWithArgs).run("")
     }
 }
 
@@ -41,6 +43,7 @@ fun processPipeline(pipeline: List<List<String>>): String = pipeline.fold("") { 
         "echo" -> Echo(cmdWithArgs).run(stdin)
         "wc" -> Wc(cmdWithArgs).run(stdin)
         "pwd" -> Pwd(cmdWithArgs).run(stdin)
+        "grep" -> Grep(cmdWithArgs).run(stdin)
         "exit" -> "" // Exit on pipeline do nothing
         else -> if (cmdWithArgs[0].contains('=')) {
             "" // In pipeline assignment do nothing
