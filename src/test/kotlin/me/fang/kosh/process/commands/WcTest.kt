@@ -15,7 +15,7 @@ class WcTest {
         assertEquals("1 1 3\n", Wc(listOf("wc")).run("123"))
         assertEquals(
             getResource("/messages/commands-help/wc.txt")?.readText(),
-            Wc(listOf("wc", "--help")).run()
+            Wc(listOf("wc", "--help")).run("")
         )
     }
 }

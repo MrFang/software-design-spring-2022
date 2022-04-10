@@ -12,5 +12,5 @@ internal interface KoshProcess {
      * @param stdin стандартный ввод
      * @return Стандартный вывод
      */
-    fun run(stdin: String = ""): String
+    fun run(stdin: String): String
 }

@@ -17,6 +17,7 @@ repositories {
 val main = "me.fang.kosh.MainKt"
 
 dependencies {
+    implementation("com.github.ajalt.clikt:clikt:3.4.0")
     testImplementation(kotlin("test"))
 }
 
