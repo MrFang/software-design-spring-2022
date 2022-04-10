@@ -14,6 +14,8 @@ repositories {
     mavenCentral()
 }
 
+val main = "me.fang.kosh.MainKt"
+
 dependencies {
     testImplementation(kotlin("test"))
 }
@@ -41,6 +43,13 @@ tasks.getByName("run", JavaExec::class) {
     standardInput = System.`in`
 }
 
+tasks.jar {
+    manifest.attributes["Main-Class"] = main
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
+
 application {
-    mainClass.set("me.fang.kosh.MainKt")
+    mainClass.set(main)
 }

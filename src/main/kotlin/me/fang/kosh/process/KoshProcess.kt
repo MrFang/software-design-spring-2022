@@ -4,7 +4,7 @@ package me.fang.kosh.process
  * Общий интерфейс для всего, что можно запускать
  * @property args список аргументов процесса вместе с именем команды, если таковое есть
  */
-interface KoshProcess {
+internal interface KoshProcess {
     val args: List<String>
 
     /**

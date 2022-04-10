@@ -30,7 +30,7 @@ fun main() {
         } catch (_: ExitCalledException) {
             return
         } catch (e: Exception) {
-            System.err.println(e.message)
+            System.err.println(e)
         }
     }
 }
