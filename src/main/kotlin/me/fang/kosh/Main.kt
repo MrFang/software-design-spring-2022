@@ -15,7 +15,7 @@ fun main() {
         val commands = parse(input)
 
         if (commands.isFailure) {
-            System.err.println(commands.exceptionOrNull()?.message)
+            commands.exceptionOrNull()?.message?.let { System.err.println(it) }
             continue
         }
 

@@ -113,21 +113,21 @@ class Wc(override val args: List<String>) : KoshProcess {
         } + '\n'
     }
 
-    private fun getOutput(text: String): String = (if (lc) "${getLinesCount(text)} " else "") +
-        (if (wc) "${getWordsCount(text)} " else "") +
-        (if (cc) "${getCharsCount(text)} " else "") +
-        (if (bc) "${getBytesCount(text)} " else "") +
-        (if (dw) "${getDisplayWidth(text)} " else "")
+    private fun getOutput(text: String): String = buildString {
+        append(if (lc) "${getLinesCount(text)} " else "")
+        append(if (wc) "${getWordsCount(text)} " else "")
+        append(if (cc) "${getCharsCount(text)} " else "")
+        append(if (bc) "${getBytesCount(text)} " else "")
+        append(if (dw) "${getDisplayWidth(text)} " else "")
+    }
 
     private fun getWordsCount(str: String): Int = str.split(' ').filter { it.isNotEmpty() }.size
 
     private fun getLinesCount(str: String): Int = str.split('\n').size
 
-    private fun getCharsCount(str: String): Int = str.chars().reduce(0) { acc, _ -> acc + 1 }
+    private fun getCharsCount(str: String): Long = str.chars().count()
 
     private fun getBytesCount(str: String): Int = str.toByteArray().size
 
-    private fun getDisplayWidth(str: String): Int = str.split('\n').fold(0) { m, s ->
-        kotlin.math.max(s.length, m)
-    }
+    private fun getDisplayWidth(str: String): Int = str.split('\n').maxOf { s -> s.length }
 }

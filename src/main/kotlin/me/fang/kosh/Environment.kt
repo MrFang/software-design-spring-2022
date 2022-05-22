@@ -16,5 +16,5 @@ internal object Environment {
                 field = value.toAbsolutePath()
             }
         }
-    var vars: MutableMap <String, String> = HashMap()
+    val vars: MutableMap <String, String> = HashMap()
 }

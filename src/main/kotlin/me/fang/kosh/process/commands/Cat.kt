@@ -23,6 +23,36 @@ class Cat(override val args: List<String>) : KoshProcess {
      */
     override fun run(stdin: String): String {
         val filenames = args.drop(1).filter { it == "-" || !it.startsWith('-') }
+        if (parseArgs(args).isFailure) {
+            return ""
+        }
+
+        if (help) {
+            val file = getResource("/messages/commands-help/cat.txt")
+            return if (file == null) {
+                System.err.println("Internal error")
+                ""
+            } else {
+                file.readText()
+            }
+        }
+
+        return if (filenames.isNotEmpty()) {
+            filenames.fold("") { out, file ->
+                "$out\n${
+                if (file == "-" && !stdinRead) {
+                    stdinRead = false
+                    transform(stdin)
+                } else {
+                    transform(Path(file).readText())
+                }}"
+            }.drop(1)
+        } else {
+            transform(stdin)
+        }
+    }
+
+    private fun parseArgs(args: List<String>): Result<Unit> {
         args.drop(1).filter { it.startsWith('-') && it != "-" }.forEach { arg ->
             run {
                 if (!arg.startsWith("--")) {
@@ -53,7 +83,7 @@ class Cat(override val args: List<String>) : KoshProcess {
                             'v' -> showNonPrinting = true
                             else -> {
                                 System.err.println("Invalid option: '$it'")
-                                return ""
+                                return Result.failure(Exception())
                             }
                         }
                     }
@@ -79,36 +109,14 @@ class Cat(override val args: List<String>) : KoshProcess {
                         }
                         else -> {
                             System.err.println("Invalid option: '$arg'")
-                            return ""
+                            return Result.failure(Exception());
                         }
                     }
                 }
             }
         }
 
-        if (help) {
-            val file = getResource("/messages/commands-help/cat.txt")
-            return if (file == null) {
-                System.err.println("Internal error")
-                ""
-            } else {
-                file.readText()
-            }
-        }
-
-        return if (filenames.isNotEmpty()) {
-            filenames.fold("") { out, file ->
-                "$out\n${
-                if (file == "-" && !stdinRead) {
-                    stdinRead = false
-                    transform(stdin)
-                } else {
-                    transform(Path(file).readText())
-                }}"
-            }.drop(1)
-        } else {
-            transform(stdin)
-        }
+        return Result.success(Unit);
     }
 
     private fun transform(txt: String): String {

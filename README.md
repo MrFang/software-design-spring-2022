@@ -1,8 +1,16 @@
 # Kosh
 ##### Like ambassador Kosh, strange and scary. Or KoSh for Kotlin-Shell
-# 
+#
 
 Реализация части shell функционала на Kotlin.
+
+## Запуск
+Для запуска нужен JDK 11+
+```sh
+$ ./gradlew build
+$ unzip build/distributions/kosh-1.0-SNAPSHOT.zip
+$ ./kosh-1.0-SNAPSHOT/bin/kosh
+```
 
 ## Описание реализации
 
