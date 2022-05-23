@@ -2,6 +2,9 @@ package me.fang.kosh.process.commands
 
 import me.fang.kosh.getResource
 import me.fang.kosh.process.KoshProcess
+import java.io.InputStream
+import java.io.OutputStream
+import java.nio.charset.Charset
 import kotlin.io.path.Path
 import kotlin.io.path.readText
 
@@ -16,40 +19,50 @@ class Cat(override val args: List<String>) : KoshProcess {
     private var suppressEmptyLines = false
     private var showTabs = false
     private var showNonPrinting = false
-    private var stdinRead = false
 
     /**
      * Парсит stdin, находит в нём имена файлов и выводит их содержимое в порядке ввода в stdout
      */
-    override fun run(stdin: String): String {
+    override fun run(stdin: InputStream, stdout: OutputStream, stderr: OutputStream): Int {
         val filenames = args.drop(1).filter { it == "-" || !it.startsWith('-') }
-        if (parseArgs(args).isFailure) {
-            return ""
+        val res = parseArgs(args)
+        if (res.isFailure) {
+            stderr.write(res.exceptionOrNull()!!.message!!.toByteArray())
+            return 1
         }
 
         if (help) {
             val file = getResource("/messages/commands-help/cat.txt")
             return if (file == null) {
-                System.err.println("Internal error")
-                ""
+                stderr.write("Internal error".toByteArray())
+                1
             } else {
-                file.readText()
+                stdout.write(file.readText().toByteArray())
+                0
             }
         }
 
-        return if (filenames.isNotEmpty()) {
-            filenames.fold("") { out, file ->
-                "$out\n${
-                if (file == "-" && !stdinRead) {
-                    stdinRead = false
-                    transform(stdin)
+        stdout.write(
+            (
+                if (filenames.isNotEmpty()) {
+                    filenames.fold("") { out, file ->
+                        "$out\n${
+                        if (file == "-") {
+                            transform(stdin.readBytes().toString(Charset.defaultCharset()))
+                            0
+                        } else {
+                            transform(Path(file).readText())
+                        }}"
+                    }
+                        .drop(1)
                 } else {
-                    transform(Path(file).readText())
-                }}"
-            }.drop(1)
-        } else {
-            transform(stdin)
-        }
+                    transform(stdin.readBytes().toString(Charset.defaultCharset()))
+                }
+                )
+                .toByteArray()
+        )
+
+        return 0
     }
 
     private fun parseArgs(args: List<String>): Result<Unit> {
@@ -82,8 +95,7 @@ class Cat(override val args: List<String>) : KoshProcess {
                             'u' -> {}
                             'v' -> showNonPrinting = true
                             else -> {
-                                System.err.println("Invalid option: '$it'")
-                                return Result.failure(Exception())
+                                return Result.failure(IllegalStateException("Invalid option: '$it'"))
                             }
                         }
                     }
@@ -108,15 +120,14 @@ class Cat(override val args: List<String>) : KoshProcess {
                             return@forEach
                         }
                         else -> {
-                            System.err.println("Invalid option: '$arg'")
-                            return Result.failure(Exception());
+                            return Result.failure(IllegalStateException("Invalid option: '$arg'"))
                         }
                     }
                 }
             }
         }
 
-        return Result.success(Unit);
+        return Result.success(Unit)
     }
 
     private fun transform(txt: String): String {

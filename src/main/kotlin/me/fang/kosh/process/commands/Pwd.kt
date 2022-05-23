@@ -3,6 +3,8 @@ package me.fang.kosh.process.commands
 import me.fang.kosh.Environment
 import me.fang.kosh.getResource
 import me.fang.kosh.process.KoshProcess
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Команда pwd
@@ -14,7 +16,7 @@ class Pwd(override val args: List<String>) : KoshProcess {
     /**
      * Возвращает текущую рабочую директорию
      */
-    override fun run(stdin: String): String {
+    override fun run(stdin: InputStream, stdout: OutputStream, stderr: OutputStream): Int {
         args.drop(1).forEach { arg ->
             run {
                 if (arg == "--help") {
@@ -26,7 +28,8 @@ class Pwd(override val args: List<String>) : KoshProcess {
                     logical = arg.drop(1).fold(logical) { _, char ->
                         run {
                             if (!"PL".contains(char)) {
-                                return "Invalid option $arg"
+                                stdout.write("Invalid option $arg".toByteArray())
+                                return 1
                             }
 
                             char == 'L'
@@ -36,18 +39,21 @@ class Pwd(override val args: List<String>) : KoshProcess {
             }
         }
 
-        return if (help) {
+        if (help) {
             val file = getResource("/messages/commands-help/pwd.txt")
-            if (file == null) {
-                System.err.println("Internal error")
-                ""
+            return if (file == null) {
+                stderr.write("Internal error".toByteArray())
+                1
             } else {
-                file.readText()
+                stdout.write((file.readText()).toByteArray())
+                0
             }
         } else if (logical) {
-            Environment.cwd.toString()
+            stdout.write((Environment.cwd.toString() + '\n').toByteArray())
+            return 0
         } else {
-            Environment.cwd.toRealPath().toString()
-        } + '\n'
+            stdout.write((Environment.cwd.toRealPath().toString() + '\n').toByteArray())
+            return 0
+        }
     }
 }

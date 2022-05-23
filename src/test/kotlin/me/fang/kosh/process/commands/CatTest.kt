@@ -1,18 +1,58 @@
 package me.fang.kosh.process.commands
 
 import me.fang.kosh.getResource
+import me.fang.kosh.process.AbstractProcessTest
 import org.junit.jupiter.api.Test
+import java.nio.charset.Charset
 import kotlin.test.assertEquals
 
-class CatTest {
+class CatTest : AbstractProcessTest() {
     @Test
-    fun testCat() {
-        assertEquals("123", Cat(listOf("cat")).run("123"))
-        assertEquals("1 123", Cat(listOf("cat", "-n")).run("123"))
-        assertEquals("123$", Cat(listOf("cat", "-E")).run("123"))
-        assertEquals("123\n\n456", Cat(listOf("cat", "-s")).run("123\n\n\n456"))
-        assertEquals("1 123\n\n\n2 456", Cat(listOf("cat", "-b")).run("123\n\n\n456"))
-        assertEquals("1 123\n2\n3 456", Cat(listOf("cat", "-ns")).run("123\n\n\n456"))
-        assertEquals(getResource("/messages/commands-help/cat.txt")?.readText(), Cat(listOf("cat", "--help")).run())
+    fun testSimple() {
+        assertEquals(0, Cat(listOf("cat")).run("123".byteInputStream(), out, err))
+        assertEquals(0, err.size())
+        assertEquals("123", out.toByteArray().toString(Charset.defaultCharset()))
+    }
+
+    @Test
+    fun testLineNumbers() {
+        assertEquals(0, Cat(listOf("cat", "-n")).run("123".byteInputStream(), out, err))
+        assertEquals(0, err.size())
+        assertEquals("1 123", out.toByteArray().toString(Charset.defaultCharset()))
+    }
+
+    @Test
+    fun testPrintLineEndings() {
+        assertEquals(0, Cat(listOf("cat", "-E")).run("123".byteInputStream(), out, err))
+        assertEquals(0, err.size())
+        assertEquals("123\$", out.toByteArray().toString(Charset.defaultCharset()))
+    }
+
+    @Test
+    fun testCollapseLineEndings() {
+        assertEquals(0, Cat(listOf("cat", "-s")).run("123\n\n\n456".byteInputStream(), out, err))
+        assertEquals(0, err.size())
+        assertEquals("123\n\n456", out.toByteArray().toString(Charset.defaultCharset()))
+    }
+
+    @Test
+    fun testNonEmptyLineNumbers() {
+        assertEquals(0, Cat(listOf("cat", "-b")).run("123\n\n\n456".byteInputStream(), out, err))
+        assertEquals(0, err.size())
+        assertEquals("1 123\n\n\n2 456", out.toByteArray().toString(Charset.defaultCharset()))
+    }
+
+    @Test
+    fun testMultipleFlags() {
+        assertEquals(0, Cat(listOf("cat", "-ns")).run("123\n\n\n456".byteInputStream(), out, err))
+        assertEquals(0, err.size())
+        assertEquals("1 123\n2\n3 456", out.toByteArray().toString(Charset.defaultCharset()))
+    }
+
+    @Test
+    fun testHelp() {
+        assertEquals(0, Cat(listOf("cat", "--help")).run("".byteInputStream(), out, err))
+        assertEquals(0, err.size())
+        assertEquals(getResource("/messages/commands-help/cat.txt")?.readText(), out.toByteArray().toString(Charset.defaultCharset()))
     }
 }

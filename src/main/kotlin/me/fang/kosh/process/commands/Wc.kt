@@ -2,6 +2,9 @@ package me.fang.kosh.process.commands
 
 import me.fang.kosh.getResource
 import me.fang.kosh.process.KoshProcess
+import java.io.InputStream
+import java.io.OutputStream
+import java.nio.charset.Charset
 import kotlin.io.path.Path
 import kotlin.io.path.isDirectory
 import kotlin.io.path.readText
@@ -25,7 +28,7 @@ class Wc(override val args: List<String>) : KoshProcess {
      * слов, переводов строки, символов, байт и максимальную длину строки.
      * Возвращает посчитанные метрики в качестве строки
      */
-    override fun run(stdin: String): String {
+    override fun run(stdin: InputStream, stdout: OutputStream, stderr: OutputStream): Int {
         var filenames = args.drop(1).filter { it == "-" || !it.startsWith('-') }
 
         args.drop(1).filter { it.startsWith('-') && it != "-" }.forEach { arg ->
@@ -42,8 +45,8 @@ class Wc(override val args: List<String>) : KoshProcess {
                             'L' -> dw = true
                             'w' -> wc = true
                             else -> {
-                                System.err.println("invalid option: '$it'")
-                                return ""
+                                stderr.write("invalid option: '$it'".toByteArray())
+                                return 1
                             }
                         }
                     }
@@ -56,8 +59,8 @@ class Wc(override val args: List<String>) : KoshProcess {
                         "max-line-length" -> { dw = true; defaultOutput = false }
                         "words" -> { wc = true; defaultOutput = false }
                         else -> {
-                            System.err.println("Invalid option: '$arg'")
-                            return ""
+                            stderr.write("Invalid option: '$arg'".toByteArray())
+                            return 1
                         }
                     }
                 }
@@ -73,44 +76,49 @@ class Wc(override val args: List<String>) : KoshProcess {
         if (help) {
             val file = getResource("/messages/commands-help/wc.txt")
             return if (file == null) {
-                System.err.println("Internal error")
-                ""
+                stderr.write("Internal error".toByteArray())
+                1
             } else {
-                file.readText()
+                stdout.write(file.readText().toByteArray())
+                0
             }
         }
 
         if (fromFile != null) {
             filenames = if (fromFile == "-") {
-                stdinRead = true
-                stdin.split(0.toChar())
+                stdin.readBytes()
+                    .toString(Charset.defaultCharset())
+                    .split(0.toChar())
             } else {
                 Path(fromFile!!).readText().split(0.toChar())
             }
         }
 
-        return if (filenames.isNotEmpty()) {
-            filenames.fold("") { out, name ->
-                run {
-                    val text = if (name == "-") {
-                        if (stdinRead) "" else {
-                            stdinRead = true
-                            stdin
-                        }
-                    } else {
-                        val f = Path(name)
-                        if (f.isDirectory()) {
-                            System.err.println("$name is directory")
-                        }
-                        f.readText()
-                    }
+        stdout.write(
+            (
+                if (filenames.isNotEmpty()) {
+                    filenames.fold("") { out, name ->
+                        run {
+                            val text = if (name == "-") {
+                                stdin.readAllBytes().toString(Charset.defaultCharset())
+                            } else {
+                                val f = Path(name)
+                                if (f.isDirectory()) {
+                                    stderr.write("$name is directory".toByteArray())
+                                }
+                                f.readText()
+                            }
 
-                    "${out}\n" + getOutput(text) + name
-                }
-            }.drop(1)
-        } else {
-            getOutput(stdin).dropLast(1)
-        } + '\n'
+                            "${out}\n" + getOutput(text) + name
+                        }
+                    }.drop(1)
+                } else {
+                    getOutput(stdin.readBytes().toString(Charset.defaultCharset())).dropLast(1)
+                } + '\n'
+                ).toByteArray()
+        )
+
+        return 0
     }
 
     private fun getOutput(text: String): String = buildString {

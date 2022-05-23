@@ -1,6 +1,8 @@
 package me.fang.kosh.process.commands
 
 import me.fang.kosh.process.KoshProcess
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Команда echo
@@ -13,7 +15,7 @@ class Echo(override val args: List<String>) : KoshProcess {
     /**
      * Парсит аргументы и возвращает их через пробел в stdout в порядке ввода
      */
-    override fun run(stdin: String): String {
+    override fun run(stdin: InputStream, stdout: OutputStream, stderr: OutputStream): Int {
         val toPrint = args.drop(1).filter { !it.startsWith('-') || !it.drop(1).containsOf(allowedOptions) }
         args.drop(1).filter { it.startsWith('-') && it.drop(1).containsOf(allowedOptions) }.forEach { arg ->
             arg.drop(1).forEach {
@@ -25,11 +27,16 @@ class Echo(override val args: List<String>) : KoshProcess {
             }
         }
 
-        return toPrint.fold("") { out, s ->
-            "$out ${if (backslashInterpretation) replaceBackslashes(s) else s}"
-        }
-            .drop(1) +
-            if (trailingNewline) '\n' else ""
+        stdout.write(
+            toPrint
+                .joinToString(
+                    separator = " ",
+                    postfix = (if (trailingNewline) "\n" else "")
+                ) { s -> if (backslashInterpretation) replaceBackslashes(s) else s }
+                .toByteArray()
+        )
+
+        return 0
     }
 
     private fun replaceBackslashes(str: String) = str
