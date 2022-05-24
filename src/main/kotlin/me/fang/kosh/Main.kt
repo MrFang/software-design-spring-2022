@@ -6,6 +6,8 @@ import me.fang.kosh.process.processPipeline
 import me.fang.kosh.process.processSingleCommand
 
 fun main() {
+    val cli: Cli = DefaultCli(DefaultCommandMapper(), System.`in`, System.out, System.err)
+
     while (true) {
         print("kosh:$ ")
         val input = readLine() ?: return
@@ -21,12 +23,10 @@ fun main() {
 
         try {
             val stdout = if (commands.getOrNull()?.size == 1) {
-                processSingleCommand(commands.getOrThrow()[0])
+                cli.processSingleCommand(commands.getOrThrow()[0])
             } else {
-                processPipeline(commands.getOrThrow())
+                cli.processPipeline(commands.getOrThrow())
             }
-
-            print(stdout)
         } catch (_: ExitCalledException) {
             return
         } catch (e: Exception) {

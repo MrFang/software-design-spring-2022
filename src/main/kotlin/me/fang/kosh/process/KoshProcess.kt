@@ -7,7 +7,7 @@ import java.io.OutputStream
  * Общий интерфейс для всего, что можно запускать
  * @property args список аргументов процесса вместе с именем команды, если таковое есть
  */
-internal interface KoshProcess {
+interface KoshProcess {
     val args: List<String>
 
     /**
