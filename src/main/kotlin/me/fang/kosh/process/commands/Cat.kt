@@ -1,9 +1,8 @@
 package me.fang.kosh.process.commands
 
 import me.fang.kosh.getResource
+import me.fang.kosh.process.Cli
 import me.fang.kosh.process.KoshProcess
-import java.io.InputStream
-import java.io.OutputStream
 import java.nio.charset.Charset
 import kotlin.io.path.Path
 import kotlin.io.path.readText
@@ -23,32 +22,32 @@ class Cat(override val args: List<String>) : KoshProcess {
     /**
      * Парсит stdin, находит в нём имена файлов и выводит их содержимое в порядке ввода в stdout
      */
-    override fun run(stdin: InputStream, stdout: OutputStream, stderr: OutputStream): Int {
+    override fun run(cli: Cli): Int {
         val filenames = args.drop(1).filter { it == "-" || !it.startsWith('-') }
         val res = parseArgs(args)
         if (res.isFailure) {
-            stderr.write(res.exceptionOrNull()!!.message!!.toByteArray())
+            cli.stderr.write(res.exceptionOrNull()!!.message!!.toByteArray())
             return 1
         }
 
         if (help) {
             val file = getResource("/messages/commands-help/cat.txt")
             return if (file == null) {
-                stderr.write("Internal error".toByteArray())
+                cli.stderr.write("Internal error".toByteArray())
                 1
             } else {
-                stdout.write(file.readText().toByteArray())
+                cli.stdout.write(file.readText().toByteArray())
                 0
             }
         }
 
-        stdout.write(
+        cli.stdout.write(
             (
                 if (filenames.isNotEmpty()) {
                     filenames.fold("") { out, file ->
                         "$out\n${
                         if (file == "-") {
-                            transform(stdin.readBytes().toString(Charset.defaultCharset()))
+                            transform(cli.stdin.readBytes().toString(Charset.defaultCharset()))
                             0
                         } else {
                             transform(Path(file).readText())
@@ -56,7 +55,7 @@ class Cat(override val args: List<String>) : KoshProcess {
                     }
                         .drop(1)
                 } else {
-                    transform(stdin.readBytes().toString(Charset.defaultCharset()))
+                    transform(cli.stdin.readBytes().toString(Charset.defaultCharset()))
                 }
                 )
                 .toByteArray()

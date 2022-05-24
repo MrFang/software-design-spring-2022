@@ -1,9 +1,8 @@
 package me.fang.kosh.process.commands
 
 import me.fang.kosh.getResource
+import me.fang.kosh.process.Cli
 import me.fang.kosh.process.KoshProcess
-import java.io.InputStream
-import java.io.OutputStream
 import java.nio.charset.Charset
 import kotlin.io.path.Path
 import kotlin.io.path.isDirectory
@@ -28,7 +27,7 @@ class Wc(override val args: List<String>) : KoshProcess {
      * слов, переводов строки, символов, байт и максимальную длину строки.
      * Возвращает посчитанные метрики в качестве строки
      */
-    override fun run(stdin: InputStream, stdout: OutputStream, stderr: OutputStream): Int {
+    override fun run(cli: Cli): Int {
         var filenames = args.drop(1).filter { it == "-" || !it.startsWith('-') }
 
         args.drop(1).filter { it.startsWith('-') && it != "-" }.forEach { arg ->
@@ -45,7 +44,7 @@ class Wc(override val args: List<String>) : KoshProcess {
                             'L' -> dw = true
                             'w' -> wc = true
                             else -> {
-                                stderr.write("invalid option: '$it'".toByteArray())
+                                cli.stderr.write("invalid option: '$it'".toByteArray())
                                 return 1
                             }
                         }
@@ -59,7 +58,7 @@ class Wc(override val args: List<String>) : KoshProcess {
                         "max-line-length" -> { dw = true; defaultOutput = false }
                         "words" -> { wc = true; defaultOutput = false }
                         else -> {
-                            stderr.write("Invalid option: '$arg'".toByteArray())
+                            cli.stderr.write("Invalid option: '$arg'".toByteArray())
                             return 1
                         }
                     }
@@ -76,17 +75,17 @@ class Wc(override val args: List<String>) : KoshProcess {
         if (help) {
             val file = getResource("/messages/commands-help/wc.txt")
             return if (file == null) {
-                stderr.write("Internal error".toByteArray())
+                cli.stderr.write("Internal error".toByteArray())
                 1
             } else {
-                stdout.write(file.readText().toByteArray())
+                cli.stdout.write(file.readText().toByteArray())
                 0
             }
         }
 
         if (fromFile != null) {
             filenames = if (fromFile == "-") {
-                stdin.readBytes()
+                cli.stdin.readBytes()
                     .toString(Charset.defaultCharset())
                     .split(0.toChar())
             } else {
@@ -94,17 +93,17 @@ class Wc(override val args: List<String>) : KoshProcess {
             }
         }
 
-        stdout.write(
+        cli.stdout.write(
             (
                 if (filenames.isNotEmpty()) {
                     filenames.fold("") { out, name ->
                         run {
                             val text = if (name == "-") {
-                                stdin.readAllBytes().toString(Charset.defaultCharset())
+                                cli.stdin.readAllBytes().toString(Charset.defaultCharset())
                             } else {
                                 val f = Path(name)
                                 if (f.isDirectory()) {
-                                    stderr.write("$name is directory".toByteArray())
+                                    cli.stderr.write("$name is directory".toByteArray())
                                 }
                                 f.readText()
                             }
@@ -113,7 +112,7 @@ class Wc(override val args: List<String>) : KoshProcess {
                         }
                     }.drop(1)
                 } else {
-                    getOutput(stdin.readBytes().toString(Charset.defaultCharset())).dropLast(1)
+                    getOutput(cli.stdin.readBytes().toString(Charset.defaultCharset())).dropLast(1)
                 } + '\n'
                 ).toByteArray()
         )

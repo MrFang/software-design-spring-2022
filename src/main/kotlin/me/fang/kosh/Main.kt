@@ -2,8 +2,8 @@ package me.fang.kosh
 
 import me.fang.kosh.exceptions.ExitCalledException
 import me.fang.kosh.parser.parse
-import me.fang.kosh.process.processPipeline
-import me.fang.kosh.process.processSingleCommand
+import me.fang.kosh.process.Cli
+import me.fang.kosh.process.DefaultCli
 
 fun main() {
     val cli: Cli = DefaultCli(DefaultCommandMapper(), System.`in`, System.out, System.err)

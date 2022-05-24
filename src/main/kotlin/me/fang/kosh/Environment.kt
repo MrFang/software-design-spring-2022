@@ -1,5 +1,7 @@
 package me.fang.kosh
 
+import me.fang.kosh.Environment.cwd
+import me.fang.kosh.Environment.vars
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory

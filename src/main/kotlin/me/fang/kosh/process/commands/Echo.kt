@@ -1,8 +1,7 @@
 package me.fang.kosh.process.commands
 
+import me.fang.kosh.process.Cli
 import me.fang.kosh.process.KoshProcess
-import java.io.InputStream
-import java.io.OutputStream
 
 /**
  * Команда echo
@@ -15,7 +14,7 @@ class Echo(override val args: List<String>) : KoshProcess {
     /**
      * Парсит аргументы и возвращает их через пробел в stdout в порядке ввода
      */
-    override fun run(stdin: InputStream, stdout: OutputStream, stderr: OutputStream): Int {
+    override fun run(cli: Cli): Int {
         val toPrint = args.drop(1).filter { !it.startsWith('-') || !it.drop(1).containsOf(allowedOptions) }
         args.drop(1).filter { it.startsWith('-') && it.drop(1).containsOf(allowedOptions) }.forEach { arg ->
             arg.drop(1).forEach {
@@ -27,7 +26,7 @@ class Echo(override val args: List<String>) : KoshProcess {
             }
         }
 
-        stdout.write(
+        cli.stdout.write(
             toPrint
                 .joinToString(
                     separator = " ",
