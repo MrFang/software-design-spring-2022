@@ -22,7 +22,7 @@ fun main() {
         }
 
         try {
-            val stdout = if (commands.getOrNull()?.size == 1) {
+            if (commands.getOrNull()?.size == 1) {
                 cli.processSingleCommand(commands.getOrThrow()[0])
             } else {
                 cli.processPipeline(commands.getOrThrow())
