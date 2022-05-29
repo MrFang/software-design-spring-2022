@@ -27,7 +27,7 @@ class TestCli : AbstractProcessTest() {
 
     @Test
     fun testStdoutToStdin() {
-        assertEquals(0, cli.processPipeline(listOf(listOf("echo", "123"), listOf("cat"))))
+        assertEquals(0, cli.processPipeline(listOf(listOf("echo", "123"), listOf("cat", "-"))))
         assertEquals(0, err.size())
         assertEquals("123\n", out.toString(Charset.defaultCharset()))
     }

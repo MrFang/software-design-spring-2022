@@ -25,8 +25,9 @@ class Cat(override val args: List<String>) : KoshProcess {
     override fun run(cli: Cli): Int {
         val filenames = args.drop(1).filter { it == "-" || !it.startsWith('-') }
         val res = parseArgs(args)
+
         if (res.isFailure) {
-            cli.stderr.write(res.exceptionOrNull()!!.message!!.toByteArray())
+            cli.stderr.write(res.exceptionOrNull()!!.toString().toByteArray())
             return 1
         }
 
@@ -41,6 +42,11 @@ class Cat(override val args: List<String>) : KoshProcess {
             }
         }
 
+        if (filenames.isEmpty()) {
+            cli.stderr.write("No args passed".toByteArray())
+            return 1
+        }
+
         cli.stdout.write(
             (
                 if (filenames.isNotEmpty()) {
@@ -48,7 +54,6 @@ class Cat(override val args: List<String>) : KoshProcess {
                         "$out\n${
                         if (file == "-") {
                             transform(cli.stdin.readBytes().toString(Charset.defaultCharset()))
-                            0
                         } else {
                             transform(Path(file).readText())
                         }}"
