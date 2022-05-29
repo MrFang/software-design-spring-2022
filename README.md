@@ -14,6 +14,8 @@ $ ./kosh-1.0-SNAPSHOT/bin/kosh
 
 ## Описание реализации
 
+В файле `diagrams.pdf` лежат UML диаграммы проекта
+
 ### Корневой модуль
 
 #### Environment
