@@ -156,5 +156,9 @@ internal fun parse(s: String): Result<List<List<String>>> {
     val preTokens = preTokenList(s).getOrElse { return Result.failure(it) }
     val res = commands.parse(preTokens).getOrElse { return Result.failure(it) }
 
+    if (res.first.isNotEmpty()) {
+        return Result.failure(UnexpectedTokenException(res.first.dropWhile { it is Space }.first().s))
+    }
+
     return Result.success(res.second.map { l -> l.map { it.s } })
 }

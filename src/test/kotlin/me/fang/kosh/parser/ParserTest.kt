@@ -5,6 +5,7 @@ import me.fang.kosh.exceptions.UnexpectedTokenException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ParserTest {
     @Test
@@ -26,5 +27,10 @@ class ParserTest {
         assertEquals(Result.success(listOf(listOf("echo", "\$x=2"))), parse("echo '\$x'\"\$x\""))
         assertThrows<UnexpectedTokenException> { parse("").getOrThrow() }
         assertThrows<UnexpectedTokenException> { parse("| echo hello").getOrThrow() }
+    }
+
+    @Test
+    fun testTrailingPipeline() {
+        assertTrue(parse("cat .gitignore |").isFailure)
     }
 }
